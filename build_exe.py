@@ -14,7 +14,7 @@ def build():
         # ChromaDBなどの依存関係で必要なデータを含める設定
         '--collect-all=chromadb',
         '--collect-all=posthog',
-        '--collect-all=onxxruntime',
+        '--collect-all=onnxruntime',
     ]
 
     print("Building EXE... This may take a while.")
