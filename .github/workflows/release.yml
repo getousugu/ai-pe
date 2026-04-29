@@ -39,6 +39,8 @@ jobs:
     - name: Install system dependencies
       run: |
         sudo apt-get update
+        # Ubuntu 24.04では libasound2 → libasound2t64 に名前変更
+        sudo apt-get install -y libpulse0 libasound2t64 fuse libfuse2 || \
         sudo apt-get install -y libpulse0 libasound2 fuse libfuse2
     - name: Install Python dependencies
       run: |
