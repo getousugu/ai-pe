@@ -22,7 +22,7 @@ jobs:
     - name: Build EXE
       run: python build_exe.py
     - name: Upload Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4   # v3→v4に修正
       with:
         name: windows-binary
         path: dist/DesktopAI.exe
@@ -36,33 +36,42 @@ jobs:
       with:
         python-version: '3.10'
         cache: 'pip'
-    - name: Install dependencies
+    - name: Install system dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y libpulse0 libasound2
+        sudo apt-get install -y libpulse0 libasound2 fuse libfuse2
+    - name: Install Python dependencies
+      run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
     - name: Build Binary
       run: python build_exe.py
     - name: Create AppImage
       run: |
-        # AppDirの作成
         mkdir -p AppDir/usr/bin
         cp dist/DesktopAI AppDir/usr/bin/
-        cp DesktopAI.sh AppDir/AppRun
-        chmod +x AppDir/AppRun
-        
-        # アイコンとデスクトップファイルの用意（簡易版）
-        touch AppDir/DesktopAI.desktop
-        echo -e "[Desktop Entry]\nName=DesktopAI\nExec=DesktopAI\nIcon=icon\nType=Application\nCategories=Utility;" > AppDir/DesktopAI.desktop
+        chmod +x AppDir/usr/bin/DesktopAI
+        cat > AppDir/DesktopAI.desktop << 'EOF'
+        [Desktop Entry]
+        Name=Desktop AI
+        Exec=DesktopAI
+        Icon=icon
+        Type=Application
+        Categories=Utility;
+        EOF
+        # ダミーアイコン（なければエラーになるため）
         touch AppDir/icon.png
-        
-        # appimagetoolのダウンロードと実行
+        cat > AppDir/AppRun << 'EOF'
+        #!/bin/bash
+        HERE="$(dirname "$(readlink -f "${0}")")"
+        exec "$HERE/usr/bin/DesktopAI" "$@"
+        EOF
+        chmod +x AppDir/AppRun
         curl -LO https://github.com/AppImage/AppImageKit/releases/download/13/appimagetool-x86_64.AppImage
         chmod +x appimagetool-x86_64.AppImage
         ./appimagetool-x86_64.AppImage --appimage-extract-and-run AppDir DesktopAI-x86_64.AppImage
     - name: Upload Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4   # v3→v4に修正
       with:
         name: linux-appimage
         path: DesktopAI-x86_64.AppImage
@@ -72,11 +81,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Download Windows Artifact
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4  # v3→v4に修正
       with:
         name: windows-binary
     - name: Download Linux Artifact
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4  # v3→v4に修正
       with:
         name: linux-appimage
     - name: Release
