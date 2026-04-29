@@ -3,19 +3,20 @@ name: Build and Release EXE
 on:
   push:
     tags:
-      - 'v*' # v1.0, v1.1 などのタグがプッシュされた時に発動
+      - 'v*'
 
 jobs:
   build:
     runs-on: windows-latest
     
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4 # v3からv4に更新
     
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5 # v4からv5に更新
       with:
         python-version: '3.10'
+        cache: 'pip' # pipのキャッシュを有効化
         
     - name: Install dependencies
       run: |

@@ -1,6 +1,6 @@
 import PyInstaller.__main__
 import os
-import shutil
+import sys
 
 def build():
     # ビルド設定
@@ -11,23 +11,27 @@ def build():
         '--windowed',              # 実行時にコンソールを出さない
         '--clean',                 # ビルド前にキャッシュを削除
         '--noconfirm',             # 上書き確認をスキップ
-        # ChromaDBなどの依存関係で必要なデータを含める設定
-        '--collect-all=chromadb',
-        '--collect-all=posthog',
-        '--collect-all=onnxruntime',
+        '--hidden-import=pkg_resources.py2_warn', # よくあるエラー対策
+        '--collect-submodules=chromadb',
+        '--copy-metadata=chromadb',
+        '--copy-metadata=tqdm',
+        '--copy-metadata=regex',
+        '--copy-metadata=requests',
+        '--copy-metadata=packaging',
+        '--copy-metadata=filelock',
+        '--copy-metadata=numpy',
+        '--copy-metadata=tokenizers',
+        '--copy-metadata=onnxruntime',
     ]
 
     print("Building EXE... This may take a while.")
-    PyInstaller.__main__.run(params)
+    try:
+        PyInstaller.__main__.run(params)
+    except Exception as e:
+        print(f"Build failed: {e}")
+        sys.exit(1)
 
-    # 必要なら、生成後にdistフォルダから取り出すなどの処理
     print("\nBuild completed! Check the 'dist' folder for DesktopAI.exe")
 
 if __name__ == "__main__":
-    # PyInstallerがインストールされているか確認
-    try:
-        import PyInstaller
-    except ImportError:
-        print("Error: PyInstaller is not installed. Run 'pip install pyinstaller'")
-    else:
-        build()
+    build()

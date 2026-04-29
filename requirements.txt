@@ -4,4 +4,5 @@ groq
 chromadb
 Pillow
 requests
-# tavily-python (if using search)
+pyinstaller
+pyinstaller-hooks-contrib
