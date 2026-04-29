@@ -1,0 +1,13 @@
+#!/bin/bash
+HERE="$(dirname "$(readlink -f "${0}")")"
+export PYTHONPATH="$HERE/usr/lib/python3.10/site-packages:$PYTHONPATH"
+export PATH="$HERE/usr/bin:$PATH"
+
+# 書き込みが必要なディレクトリをユーザーのホームディレクトリにリンクまたは作成するロジック
+DATA_HOME="$HOME/.local/share/DesktopAI"
+mkdir -p "$DATA_HOME/plugins" "$DATA_HOME/memory_db" "$DATA_HOME/workspace"
+
+# 初回起動時に標準スキルをユーザーディレクトリにコピー（任意）
+# cp -rn "$HERE/skills" "$DATA_HOME/"
+
+exec "$HERE/usr/bin/python3" "$HERE/main.py" "$@"
