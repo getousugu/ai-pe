@@ -1,4 +1,4 @@
-name: Build and Release EXE
+name: Build and Release
 
 on:
   push:
@@ -6,31 +6,84 @@ on:
       - 'v*'
 
 jobs:
-  build:
+  build-windows:
     runs-on: windows-latest
-    
     steps:
-    - uses: actions/checkout@v4 # v3からv4に更新
-    
+    - uses: actions/checkout@v4
     - name: Set up Python
-      uses: actions/setup-python@v5 # v4からv5に更新
+      uses: actions/setup-python@v5
       with:
         python-version: '3.10'
-        cache: 'pip' # pipのキャッシュを有効化
-        
+        cache: 'pip'
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install pyinstaller
-        
-    - name: Build with PyInstaller
+    - name: Build EXE
+      run: python build_exe.py
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: windows-binary
+        path: dist/DesktopAI.exe
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+        cache: 'pip'
+    - name: Install dependencies
       run: |
-        python build_exe.py
+        sudo apt-get update
+        sudo apt-get install -y libpulse0 libasound2
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    - name: Build Binary
+      run: python build_exe.py
+    - name: Create AppImage
+      run: |
+        # AppDirの作成
+        mkdir -p AppDir/usr/bin
+        cp dist/DesktopAI AppDir/usr/bin/
+        cp DesktopAI.sh AppDir/AppRun
+        chmod +x AppDir/AppRun
         
+        # アイコンとデスクトップファイルの用意（簡易版）
+        touch AppDir/DesktopAI.desktop
+        echo -e "[Desktop Entry]\nName=DesktopAI\nExec=DesktopAI\nIcon=icon\nType=Application\nCategories=Utility;" > AppDir/DesktopAI.desktop
+        touch AppDir/icon.png
+        
+        # appimagetoolのダウンロードと実行
+        curl -LO https://github.com/AppImage/AppImageKit/releases/download/13/appimagetool-x86_64.AppImage
+        chmod +x appimagetool-x86_64.AppImage
+        ./appimagetool-x86_64.AppImage --appimage-extract-and-run AppDir DesktopAI-x86_64.AppImage
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: linux-appimage
+        path: DesktopAI-x86_64.AppImage
+
+  release:
+    needs: [build-windows, build-linux]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Download Windows Artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: windows-binary
+    - name: Download Linux Artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: linux-appimage
     - name: Release
       uses: softprops/action-gh-release@v1
       with:
-        files: dist/DesktopAI.exe
+        files: |
+          DesktopAI.exe
+          DesktopAI-x86_64.AppImage
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

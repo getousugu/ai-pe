@@ -3,16 +3,19 @@ import os
 import sys
 
 def build():
-    # ビルド設定
+    # 実行ファイル名の設定
+    exe_name = 'DesktopAI'
+    if sys.platform == 'win32':
+        exe_name += '.exe'
+
     params = [
         'DesktopAI.pyw',           # メインスクリプト
-        '--name=DesktopAI',        # 生成されるEXEの名前
+        f'--name={exe_name}',      # 生成されるEXE/実行ファイルの名前
         '--onefile',               # 1つのファイルにまとめる
         '--windowed',              # 実行時にコンソールを出さない
         '--clean',                 # ビルド前にキャッシュを削除
         '--noconfirm',             # 上書き確認をスキップ
-        '--hidden-import=pkg_resources.py2_warn', # よくあるエラー対策
-        '--collect-submodules=chromadb',
+        # ChromaDBとその依存関係のメタデータを確実にコピー
         '--copy-metadata=chromadb',
         '--copy-metadata=tqdm',
         '--copy-metadata=regex',
@@ -22,16 +25,21 @@ def build():
         '--copy-metadata=numpy',
         '--copy-metadata=tokenizers',
         '--copy-metadata=onnxruntime',
+        # ファイル一式も収集
+        '--collect-all=chromadb',
+        '--collect-all=onnxruntime',
+        '--collect-all=PyQt5',
+        '--hidden-import=PyQt5.sip',
     ]
 
-    print("Building EXE... This may take a while.")
+    print("Building executable... This may take a while.")
     try:
         PyInstaller.__main__.run(params)
     except Exception as e:
         print(f"Build failed: {e}")
         sys.exit(1)
 
-    print("\nBuild completed! Check the 'dist' folder for DesktopAI.exe")
+    print("\nBuild completed!")
 
 if __name__ == "__main__":
     build()
