@@ -31,7 +31,7 @@ jobs:
         path: dist/DesktopAI.exe
 
   build-linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04 # 古いOSでビルドして互換性を高める
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python
@@ -42,8 +42,7 @@ jobs:
     - name: Install system dependencies
       run: |
         sudo apt-get update
-        # Ubuntu 24.04では libasound2 → libasound2t64 に名前変更
-        sudo apt-get install -y libpulse0 libasound2t64 fuse libfuse2 || \
+        # 20.04なので元の libasound2 でOK
         sudo apt-get install -y libpulse0 libasound2 fuse libfuse2
     - name: Install Python dependencies
       run: |
